@@ -13,27 +13,24 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install Mdbook
-      run:  cargo install mdbook --version 0.3.7 && cargo install mdbook-linkcheck --version 0.5.0
-    - name: Cache cargo registry
-      uses: actions/cache@v1
-      with:
-        path: ~/.cargo/registry
-        key: ${{ runner.os }}-cargo-registry
-    - name: Cache cargo index
-      uses: actions/cache@v1
-      with:
-        path: ~/.cargo/git
-        key: ${{ runner.os }}-cargo-index
+    - name: Install mdbook
+      run: |
+        curl -L https://github.com/rust-lang/mdBook/releases/download/v0.3.7/mdbook-v0.3.7-x86_64-unknown-linux-gnu.tar.gz | tar xz
+        # Add the book directory to the $PATH
+        echo "::add-path::$GITHUB_WORKSPACE"
+    - name: Install mdbook-toc
+      run: curl -L https://github.com/badboy/mdbook-toc/releases/download/0.2.4/mdbook-toc-0.2.4-x86_64-unknown-linux-gnu.tar.gz | tar xz
+  
+    - name: Install mdbook-mermaid
+      run: curl -L https://github.com/badboy/mdbook-mermaid/releases/download/0.2.2/mdbook-mermaid-0.2.2-x86_64-unknown-linux-gnu.tar.gz | tar xz
     - name: Build
-      run: mdbook build
+      run: |
+        mdbook build
+        touch book/.nojekyll
     - name: Deploy to pages
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-      uses: awb-pw/deploy-to-github-pages-action@1.1.1
-      env:
-        AUTHOR: crlf0710
-        BUILD_PATH: build
-        GITHUB_PAGE_NAME: SciADV-cn
-        PA_TOKEN: ${{ secrets.PA_TOKEN }}
-        USERNAME: crlf0710
-        EMAIL: crlf0710@gmail.com
+      uses: JamesIves/github-pages-deploy-action@releases/v3
+      with:
+        ACCESS_TOKEN: ${{ secrets.PA }}
+        BRANCH: gh-pages # The branch the action should deploy to.
+        FOLDER: book # The folder the action should deploy.      
